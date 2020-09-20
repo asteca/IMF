@@ -1,4 +1,6 @@
 
+import numpy as np
+from numpy.random import MT19937, RandomState, SeedSequence
 from modules import data_IO, mass_analysis, makePlot
 
 
@@ -6,6 +8,9 @@ def main():
     """
     TODO: Apply completeness corrections?
     """
+    seed = np.random.randint(100000000)
+    print("Random seed: {}".format(seed))
+    RandomState(MT19937(SeedSequence(seed)))
 
     masses_type, Nruns, alpha_min, alpha_max, min_mag, max_mag, min_mass,\
         max_mass, binar_min, binar_max = data_IO.readINI()

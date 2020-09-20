@@ -48,7 +48,7 @@ def main(
 
     ax = plt.subplot(gs[0:2, 4:6])
     ax.minorticks_on()
-    plt.title(r"Bootstrap distribution for $\alpha$")
+    plt.title(r"Bootstrap distribution (N={})".format(Nruns))
     sn.kdeplot(alpha_bootstrp)
     # plt.hist(alpha_bootstrp, 20, color='grey', density=True)
     plt.axvline(alpha_16p, c='orange', ls=':', label="16p")
@@ -71,8 +71,8 @@ def main(
     # Best fit line. Use the (last) LSF intercept for vertical alignment
     x0 = np.linspace(mass_mean_mass_msk.min(), mass_mean_mass_msk.max(), 100)
     y_vals_log = 10**intercept * x0**(-alpha_lkl)
-    txt = r"$\alpha_{{Lkl}}={:.3f}\pm{:.3f}$ (N={})".format(
-        alpha_lkl, alpha_std, Nruns)
+    txt = r"$\alpha_{{Lkl}}={:.3f}\pm{:.3f}$".format(
+        alpha_lkl, alpha_std)
     plt.plot(x0, y_vals_log, c='k', lw=2, ls='--', label=txt, zorder=5)
 
     plt.axvline(x=min_mass, c='grey', ls=':', lw=1.5)
