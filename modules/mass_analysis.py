@@ -1,159 +1,93 @@
 
-import warnings
 import numpy as np
-from scipy.optimize import differential_evolution as DE
-from astropy.stats import histogram as ashist
-import pymc3 as pm
-from . import linear_bayes_fit
+# from scipy.optimize import differential_evolution as DE
 
 
-def massResample(Nruns, min_mass, max_mass, mass_mean, mass_std):
-    """
-    """
-    y_vals, x_edges = [], []
-    for _ in range(Nruns):
-        # Re-sample mass values
-        mass_sample = np.random.normal(mass_mean, mass_std)
-        # Obtain histogram
-        yy, xx = ashist(mass_sample, bins=15, density=True)
-        xx = .5 * (xx[1:] + xx[:-1])
-        y_vals += list(yy)
-        x_edges += list(xx)
-
-    x_edges, y_vals = np.array(x_edges), np.array(y_vals)
-
-    # Filter stars outside of given mass range(min_mass, max_mass)
-    msk1 = (x_edges >= min_mass) & (x_edges <= max_mass)
-    x_edges0, y_vals0 = x_edges[~msk1], y_vals[~msk1]
-    x_edges, y_vals = x_edges[msk1], y_vals[msk1]
-
-    return x_edges0, y_vals0, x_edges, y_vals
-
-
-def maxLkl(mass_mean, mass_std, Nruns):
+def maxLkl(
+    Nruns, min_mass, max_mass, full_mr_mean, mass_mean, mass_std, alpha_bounds,
+        maxiter=10000):
     """
     Method defined in Khalaj & Baumgardt (2013):
     https://academic.oup.com/mnras/article/434/4/3236/960889
     and used in Sheikhi et al. (2016):
     https://academic.oup.com/mnras/article/457/1/1028/989829
     """
-    min_mass, max_mass = .01, 100
+    # min_mass, max_mass = .01, 100
 
     def minfunc(alpha, x, xmin, xminmax, N):
         y = abs(alpha - (1 + N / (
                 np.sum(np.log(x / xmin)) -
                 N * (np.log(xminmax) / (1 - xminmax**(alpha - 1))))))
-        return y
+        idx = np.argmin(y)
+        return alpha[idx]
 
-    # Estimate alpha using DE algorithm.
-    bounds = [(1.5, 3.5)]
+    # Range for alpha
+    # bounds = [alpha_bounds]
+    N = mass_mean.size
+    xmin = mass_mean.min()
+    xminmax = mass_mean.max() / xmin
+    alpha_vals = np.linspace(alpha_bounds[0], alpha_bounds[1], 1000)
+    # y = abs(alpha_vals - (1 + N / (
+    #         np.sum(np.log(mass_mean / xmin)) -
+    #         N * (np.log(xminmax) / (1 - xminmax**(alpha_vals - 1))))))
+
+    # Values obtained using the mean masses
+    # args = (mass_mean, mass_mean.min(),
+    #         mass_mean.max() / mass_mean.min(), mass_mean.size)
+    # alpha_lkl = DE(minfunc, bounds, maxiter=maxiter, args=args).x[0]
+    alpha_lkl = minfunc(alpha_vals, mass_mean, xmin, xminmax, N)
+
+    print("Bootstraping slope's distribution")
+    # Estimate bootstrap for alpha using DE algorithm.
     alpha_lst = []
     for _ in range(Nruns):
-        if _ % 10 == 0:
-            print(_)
         # Re-sample mass values
         mass_sample = np.random.normal(mass_mean, mass_std)
-        args = (mass_sample, mass_sample.min(),
-                mass_sample.max() / mass_sample.min(), mass_sample.size)
-        result = DE(minfunc, bounds, maxiter=5000, args=args)
-        alpha_lst.append(result.x[0])
 
-    alpha = np.mean(alpha_lst)
-    _16p, _84p = np.percentile(alpha_lst, (16, 84))
-    print(alpha, _16p, _84p)
-    intercept = (1 - alpha) / (max_mass**(1 - alpha) - min_mass**(1 - alpha))
+        # Apply mass range
+        msk = (mass_sample >= min_mass) & (mass_sample <= max_mass)
+        mass_sample = mass_sample[msk]
 
-    import matplotlib.pyplot as plt
+        # Masses can not be smaller than this value
+        mass_sample = np.clip(mass_sample, a_min=0.01, a_max=None)
+        # args = (mass_sample, mass_sample.min(),
+        #         mass_sample.max() / mass_sample.min(), mass_sample.size)
+        # result = DE(minfunc, bounds, maxiter=maxiter, args=args)
+        # alpha_lst.append(result.x[0])
 
-    # bins = np.linspace(min_mass, max_mass, 5000)
-    yy, xx = ashist(mass_mean, bins='knuth', density=True)
-    xx = .5 * (xx[1:] + xx[:-1])
-    y_vals_log = 10**intercept * xx**(-alpha)
-    plt.plot(xx, y_vals_log)
+        N = mass_sample.size
+        xmin = mass_sample.min()
+        xminmax = mass_sample.max() / xmin
+        alpha_lst.append(minfunc(alpha_vals, mass_sample, xmin, xminmax, N))
 
-    vv = np.linspace(.01, 10., 1000)
-    v_mean = []
-    for h in vv:
-        v_mean.append(np.mean((h * yy - y_vals_log)**2))
-    idx = np.argmin(v_mean)
-    print(vv[idx], np.mean((vv[idx] * yy - y_vals_log)**2))
-    plt.scatter(xx, vv[idx] * yy, alpha=.5)
+    # intercept = (1 - alpha) / (max_mass**(1 - alpha) - min_mass**(1 - alpha))
+    alpha_bootstrp = np.array(alpha_lst)
 
-    plt.loglog()
-    plt.show()
+    print("Creating dictionary of slopes for different mass ranges")
+    # Create dictionary of slopes. Store the Likelihood alpha obtained
+    # with the filtered mass range
+    alpha_ranges = {"[{:.2f}, {:.2f}]".format(
+        mass_mean.min(), mass_mean.max()): alpha_lkl}
+    # Estimate slopes using the full magnitude range
+    mr = np.linspace(full_mr_mean.min(), full_mr_mean.max(), 5)
+    mr1, mr2, mr3 = (mr[0], mr[1]), (mr[0], mr[2]), (mr[0], mr[3])
+    mr4, mr5, mr6 = (mr[1], mr[2]), (mr[1], mr[3]), (mr[1], mr[4])
+    mr7, mr8, mr9 = (mr[2], mr[3]), (mr[2], mr[4]), (mr[3], mr[4])
+    mr10 = (mr[0], mr[4])
+    for mrx in (mr1, mr2, mr3, mr4, mr5, mr6, mr7, mr8, mr9, mr10):
+        mi, mh = mrx
+        msk = (full_mr_mean >= mi) & (full_mr_mean < mh)
 
-    import pdb; pdb.set_trace()  # breakpoint afdf1aaa //
+        mass_msk = full_mr_mean[msk]
+        # args = (mass_msk, mass_msk.min(),
+        #         mass_msk.max() / mass_msk.min(), mass_msk.size)
+        # alpha_ranges["[{:.2f}, {:.2f})".format(mi, mh)] = DE(
+        #     minfunc, bounds, maxiter=maxiter, args=args).x[0]
 
-    return alpha, intercept
+        N = mass_msk.size
+        xmin = mass_msk.min()
+        xminmax = mass_msk.max() / xmin
+        alpha_ranges["[{:.2f}, {:.2f})".format(mi, mh)] = minfunc(
+            alpha_vals, mass_msk, xmin, xminmax, N)
 
-
-def emceeRun(x_edges, y_vals, nsteps, nwalkers):
-    """
-    """
-    # Obtain IMF factor.
-    # Mask -inf values that can appear when a bin contains 0 elements.
-    with warnings.catch_warnings():
-        warnings.simplefilter("ignore")
-        y_log = np.log10(y_vals)
-    msk = y_log == -np.inf
-    x_log = np.log10(x_edges[~msk])
-    y_log = y_log[~msk]
-    # No uncertainties
-    xe, ye = np.zeros(x_log.size), np.zeros(x_log.size)
-    data = np.array([x_log, y_log, xe, ye]).T
-
-    # Bayesian linear fit
-    trace = linear_bayes_fit.fit_data(data, nsteps, nwalkers)
-
-    return trace
-
-
-def pyMC3Run(x_edges, y_vals, nsteps):
-    """
-    """
-    # Mask -inf values that can appear when a bin contains 0 elements.
-    with warnings.catch_warnings():
-        warnings.simplefilter("ignore")
-        y_log = np.log10(y_vals)
-    msk = y_log == -np.inf
-    x_log = np.log10(x_edges[~msk])
-    y_log = y_log[~msk]
-
-    data = dict(x=x_log, y=y_log)
-
-    with pm.Model() as model_robust:
-        family = pm.glm.families.StudentT()
-        pm.glm.GLM.from_formula('y ~ x', data, family=family)
-        trace_robust = pm.sample(nsteps)
-
-    return trace_robust
-
-
-def LSFRun(min_mass, max_mass, mass_mean):
-    """
-    Least Square Fitting
-    Sigma interval for polyfit:
-    https://stackoverflow.com/a/28528966/1391441
-    """
-    yy, xx = ashist(mass_mean, bins=15, density=True)  # 'knuth'
-    x_edges = .5 * (xx[1:] + xx[:-1])
-
-    # Split stars range
-    msk = (x_edges >= min_mass) & (x_edges <= max_mass)
-    if (~msk).sum() > 0:
-        x_edges0, y_vals0 = x_edges[~msk], yy[~msk]
-    else:
-        x_edges0, y_vals0 = [], []
-    x_edges, y_vals = x_edges[msk], yy[msk]
-
-    # Mask -inf values that can appear when a bin contains 0 elements.
-    y_log = np.log10(y_vals)
-    msk = y_log == -np.inf
-    x_log = np.log10(x_edges[~msk])
-    y_log = y_log[~msk]
-    # Least squares fit
-    pars, cov_matrix = np.polyfit(x_log, y_log, 1, cov=True)
-    alpha, b = pars
-    alpha_std = cov_matrix[0][0]
-
-    return x_edges0, y_vals0, x_edges, y_vals, (alpha, b, alpha_std)
+    return alpha_lkl, alpha_bootstrp, alpha_ranges

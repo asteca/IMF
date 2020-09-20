@@ -15,14 +15,10 @@ Related literature:
 Install the requirements in a `conda` environment with:
 
 ```
-$ conda create --name imfenv python=3.8 numpy matplotlib astropy
+$ conda create --name imfenv python=3.8 numpy matplotlib seaborn astropy
 $ conda activate imfenv
-(imfenv) $ conda install -c conda-forge emcee pymc3 arviz
 ```
 
 ## Analysis
 
-1. The per-star masses are re-sampled using a Normal distribution, and a new histogram is generated each time. This histograms are what will be fed to the MCMC samplers.
-2. The selected MCMC sampler is applied. The package performs two different analysis employing `emcee` and `PyMC3`:
-  1. The `emcee` mode uses the method developed in [LinearBayes3](https://github.com/Gabriel-p/LinearBayes3) which accounts for outliers in the model. This method requires substantially more steps to properly converge, compared to the `pymc3` mode.
-  2. The `pymc3` mode applies the [Robust Linear Regression](https://docs.pymc.io/notebooks/GLM-robust.html) method. The basis of the method is that "*minimizing the squared distance of the regression line is the same as maximizing the likelihood of a Normal distribution with the mean coming from the regression line*". The method employs a Students T distribution
+
