@@ -26,12 +26,12 @@ def readINI():
 
     # Data columns
     ipars = in_params['Input parameters']
-    masses_type, Nruns, alpha_min, alpha_max, min_mag, max_mag, min_mass,\
-        max_mass, binar_min, binar_max = ipars.get('masses_type'),\
+    masses_type, Nruns, alpha_min, alpha_max, mag_min, mag_max, mass_min,\
+        mass_max, binar_min, binar_max = ipars.get('masses_type'),\
         ipars.getint('Nruns'),\
         ipars.getfloat('alpha_min'), ipars.getfloat('alpha_max'),\
-        ipars.getfloat('min_mag'), ipars.getfloat('max_mag'),\
-        ipars.getfloat('min_mass'), ipars.getfloat('max_mass'),\
+        ipars.getfloat('mag_min'), ipars.getfloat('mag_max'),\
+        ipars.getfloat('mass_min'), ipars.getfloat('mass_max'),\
         ipars.getfloat('binar_min'), ipars.getfloat('binar_max')
 
     if masses_type not in ('single', 'binar'):
@@ -41,8 +41,8 @@ def readINI():
         raise ValueError("The maximum binary fraction value must be larger "
                          "than the minimum value")
 
-    return masses_type, Nruns, alpha_min, alpha_max, min_mag, max_mag,\
-        min_mass, max_mass, binar_min, binar_max
+    return masses_type, Nruns, alpha_min, alpha_max, mag_min, mag_max,\
+        mass_min, mass_max, binar_min, binar_max
 
 
 def dataSave(data, file_out):

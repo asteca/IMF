@@ -12,8 +12,8 @@ def main():
     print("Random seed: {}".format(seed))
     RandomState(MT19937(SeedSequence(seed)))
 
-    masses_type, Nruns, alpha_min, alpha_max, min_mag, max_mag, min_mass,\
-        max_mass, binar_min, binar_max = data_IO.readINI()
+    masses_type, Nruns, alpha_min, alpha_max, mag_min, mag_max, mass_min,\
+        mass_max, binar_min, binar_max = data_IO.readINI()
 
     inputfiles = data_IO.readFiles()
 
@@ -33,23 +33,23 @@ def main():
         phot_bin_used, phot_bin_unused = phot_bmsk.T, phot[~bmsk].T
 
         # Apply magnitude range, This keeps the full mass range
-        msk = (phot_bmsk[:, 1] >= min_mag) & (phot_bmsk[:, 1] <= max_mag)
+        msk = (phot_bmsk[:, 1] >= mag_min) & (phot_bmsk[:, 1] <= mag_max)
         mass_mean_phot_msk, mass_std_phot_msk = mass_mean_bmsk[msk],\
             mass_std_bmsk[msk]
 
         # Apply mass range. Used by the likelihood analysis
-        msk = (mass_mean_phot_msk >= min_mass) &\
-            (mass_mean_phot_msk <= max_mass)
+        msk = (mass_mean_phot_msk >= mass_min) &\
+            (mass_mean_phot_msk <= mass_max)
         mass_mean_mass_msk, mass_std_mass_msk = mass_mean_phot_msk[msk],\
             mass_std_phot_msk[msk]
 
         # Maximum likelihood analysis
         alpha_lkl, alpha_bootstrp, alpha_ranges = mass_analysis.maxLkl(
-            Nruns, min_mass, max_mass, mass_mean_phot_msk, mass_mean_mass_msk,
+            Nruns, mass_min, mass_max, mass_mean_phot_msk, mass_mean_mass_msk,
             mass_std_mass_msk, (alpha_min, alpha_max))
 
         makePlot.main(
-            Nruns, min_mag, max_mag, min_mass, max_mass, binar_min, binar_max,
+            Nruns, mag_min, mag_max, mass_min, mass_max, binar_min, binar_max,
             binar_probs, phot_bin_used, phot_bin_unused, mass_mean_phot_msk,
             mass_mean_mass_msk, alpha_lkl, alpha_bootstrp, alpha_ranges,
             alpha_min, alpha_max)

@@ -9,7 +9,7 @@ import seaborn as sn
 
 
 def main(
-    Nruns, min_mag, max_mag, min_mass, max_mass, binar_min, binar_max,
+    Nruns, mag_min, mag_max, mass_min, mass_max, binar_min, binar_max,
     binar_probs, phot_bin_used, phot_bin_unused, mass_mean_phot_msk,
     mass_mean_mass_msk, alpha_lkl, alpha_bootstrp, alpha_ranges, alpha_min,
         alpha_max):
@@ -36,8 +36,8 @@ def main(
     plt.scatter(*phot_bin_used, s=10, c='r', lw=0, alpha=.5,
                 label="N={}".format(phot_bin_used.shape[1]))
     ymin, ymax = ax.get_ylim()
-    plt.axhline(min_mag, c='grey', ls=':')
-    plt.axhline(max_mag, c='grey', ls=':')
+    plt.axhline(mag_min, c='grey', ls=':')
+    plt.axhline(mag_max, c='grey', ls=':')
     plt.legend(fontsize=8)
     plt.ylim(ymin, ymax)
     plt.gca().invert_yaxis()
@@ -61,7 +61,7 @@ def main(
     plt.xlabel(r"$\alpha$")
 
     ax = plt.subplot(gs[2:4, 0:4])
-    plt.title("Mass range: [{:.2f}, {:.2f}]".format(min_mass, max_mass))
+    plt.title("Mass range: [{:.2f}, {:.2f}]".format(mass_min, mass_max))
     ax.grid(ls=':', lw=.5)
     for bins in (5, 10, 25, 50):
         xmin, xmax, ymin, ymax, intercept = binnedIMF(
@@ -75,8 +75,8 @@ def main(
         alpha_lkl, alpha_std)
     plt.plot(x0, y_vals_log, c='k', lw=2, ls='--', label=txt, zorder=5)
 
-    plt.axvline(x=min_mass, c='grey', ls=':', lw=1.5)
-    plt.axvline(x=max_mass, c='grey', ls=':', lw=1.5)
+    plt.axvline(x=mass_min, c='grey', ls=':', lw=1.5)
+    plt.axvline(x=mass_max, c='grey', ls=':', lw=1.5)
     sn.kdeplot(mass_mean_phot_msk, label="KDE of all masses")
     # region where the mass break in the IMF is usually placed
     ax.axvspan(.5, 1., alpha=0.1, color='grey')

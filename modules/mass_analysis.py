@@ -3,7 +3,7 @@ import numpy as np
 
 
 def maxLkl(
-    Nruns, min_mass, max_mass, full_mr_mean, mass_mean, mass_std, alpha_bounds,
+    Nruns, mass_min, mass_max, full_mr_mean, mass_mean, mass_std, alpha_bounds,
         maxiter=10000):
     """
     Method defined in Khalaj & Baumgardt (2013):
@@ -34,7 +34,7 @@ def maxLkl(
         mass_sample = np.random.normal(mass_mean, mass_std)
 
         # Apply mass range
-        msk = (mass_sample >= min_mass) & (mass_sample <= max_mass)
+        msk = (mass_sample >= mass_min) & (mass_sample <= mass_max)
         mass_sample = mass_sample[msk]
 
         # Masses can not be smaller than this value
@@ -43,7 +43,7 @@ def maxLkl(
         xminmax = mass_sample.max() / xmin
         alpha_lst.append(minfunc(alpha_vals, mass_sample, xmin, xminmax, N))
 
-    # intercept = (1 - alpha) / (max_mass**(1 - alpha) - min_mass**(1 - alpha))
+    # intercept = (1 - alpha) / (mass_max**(1 - alpha) - mass_min**(1 - alpha))
     alpha_bootstrp = np.array(alpha_lst)
 
     print("Creating dictionary of slopes for different mass ranges")
