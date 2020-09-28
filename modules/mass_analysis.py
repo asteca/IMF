@@ -2,9 +2,7 @@
 import numpy as np
 
 
-def maxLkl(
-    Nruns, mass_min, mass_max, full_mr_mean, mass_mean, mass_std, alpha_bounds,
-        maxiter=10000):
+def maxLkl(mass_mean, alpha_bounds, bootsrp_args, full_mr_mean):
     """
     Method defined in Khalaj & Baumgardt (2013):
     https://academic.oup.com/mnras/article/434/4/3236/960889
@@ -26,12 +24,19 @@ def maxLkl(
     alpha_vals = np.linspace(alpha_bounds[0], alpha_bounds[1], 5000)
     alpha_lkl = minfunc(alpha_vals, mass_mean, xmin, xminmax, N)
 
-    print("Bootstraping slope's distribution")
+    Nruns, mass_min, mass_max, mass_std = bootsrp_args
+
+    if mass_std is not None:
+        print("Bootstraping slope's distribution")
     # Estimate bootstrap for alpha using DE algorithm.
     alpha_lst = []
     for _ in range(Nruns):
         # Re-sample mass values
-        mass_sample = np.random.normal(mass_mean, mass_std)
+        if mass_std is not None:
+            mass_sample = np.random.normal(mass_mean, mass_std)
+            # mass_sample = np.random.choice(mass_mean, mass_mean.size)
+        else:
+            mass_sample = np.random.choice(mass_mean, mass_mean.size)
 
         # Apply mass range
         msk = (mass_sample >= mass_min) & (mass_sample <= mass_max)
@@ -41,10 +46,14 @@ def maxLkl(
         mass_sample = np.clip(mass_sample, a_min=0.01, a_max=None)
         N, xmin = mass_sample.size, mass_sample.min()
         xminmax = mass_sample.max() / xmin
-        alpha_lst.append(minfunc(alpha_vals, mass_sample, xmin, xminmax, N))
+        alpha_lst.append(minfunc(
+            alpha_vals, mass_sample, xmin, xminmax, N))
 
-    # intercept = (1 - alpha) / (mass_max**(1 - alpha) - mass_min**(1 - alpha))
+    # intercept = (1 - alpha)/(mass_max**(1 - alpha)-mass_min**(1 - alpha))
     alpha_bootstrp = np.array(alpha_lst)
+
+    if mass_std is None:
+        return alpha_lkl, alpha_bootstrp
 
     print("Creating dictionary of slopes for different mass ranges")
     # Create dictionary of slopes. Store the Likelihood alpha obtained
