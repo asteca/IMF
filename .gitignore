@@ -130,3 +130,5 @@ dmypy.json
 
 *.png
 input/*
+params.not_tracked.ini
+

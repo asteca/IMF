@@ -9,20 +9,12 @@ def readINI():
     """
     Read .ini config file
     """
-
-    # def vtype(var):
-    #     tp, v = var.split('_')
-    #     if tp == 'int':
-    #         return int(v)
-    #     elif tp == 'float':
-    #         return float(v)
-    #     elif tp == 'bool':
-    #         return bool(strtobool(v))
-    #     elif tp == 'str':
-    #         return v
-
     in_params = configparser.ConfigParser()
-    in_params.read('params.ini')
+
+    ini_file = Path("params.not_tracked.ini")
+    if not ini_file.is_file():
+        ini_file = Path("params.ini")
+    in_params.read(ini_file)
 
     # Data columns
     ipars = in_params['Input parameters']
