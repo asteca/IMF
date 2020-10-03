@@ -10,10 +10,10 @@ from .IMF import salpeter55, millerscalo79, kroupa01, chabrier03individual,\
 
 
 def main(
-    Nruns, mag_min, mag_max, mass_min, mass_max, binar_min, binar_max,
-    binar_probs, phot_bin_used, phot_bin_unused, mass_mean_phot_msk,
-    mass_mean_mass_msk, alpha_lkl, alpha_bootstrp, alpha_ranges, alpha_min,
-        alpha_max, sampled_IMFs):
+    masses_type, binar_cut, mag_min, mag_max, mass_min, mass_max, Nruns,
+    all_Nratios, binar_probs, phot_bin_used, phot_bin_unused,
+    mass_mean_phot_msk, mass_mean_mass_msk, alpha_lkl, alpha_bootstrp,
+        alpha_ranges, alpha_min, alpha_max, sampled_IMFs):
     """
     """
     print("Plotting..")
@@ -22,16 +22,57 @@ def main(
 
     ax = plt.subplot(gs[0:2, 0:2])
     ax.minorticks_on()
-    plt.title("P_min, P_max = [{:.2f}, {:.2f}]".format(binar_min, binar_max))
-    _, edges, _ = plt.hist(binar_probs, 20)
+    plt.title("P_cut = {:.2f}".format(binar_cut))
+    hist, edges = np.histogram(binar_probs, bins=20)
+    # Histogram normalized to max value equal to 1
+    plt.bar(
+        (edges[1:] + edges[:-1]) * .5, hist / hist.max(),
+        width=(edges[1] - edges[0]))
+
     plt.xlabel("Binary system probability")
+    if masses_type == 'single':
+        binar_min, binar_max = 0., binar_cut
+    else:
+        binar_min, binar_max = binar_cut, 1
     plt.axvline(x=binar_min, c='r')
     plt.axvline(x=binar_max, c='r')
-    ax.axvspan(binar_min, binar_max, alpha=0.2, color='red')
-    ax.set_yticks([])
+    ax.axvspan(binar_min, binar_max, alpha=0.1, color='red')
+
+    xx, yy = np.linspace(.01, .99, 100), []
+    Nt = len(binar_probs)
+    for bl in xx:
+        yy.append((binar_probs >= bl).sum() / Nt)
+    idx = np.argmin(abs(xx - binar_cut))
+    plt.plot(xx, yy, c='k', label="Binary fraction ({:.2f})".format(yy[idx]),
+             zorder=6)
+    plt.legend(fontsize=8)
+    # ax.set_yticks([])
     plt.xlim(0., 1.)
 
-    ax = plt.subplot(gs[0:2, 2:4])
+    ax = plt.subplot(gs[0:1, 2:4])
+    x_range, Nratios = all_Nratios[0]
+    width = .8 * (x_range[1] - x_range[0])
+    # Center bins
+    x_range = .5 * (x_range[1:] + x_range[:-1])
+    single_probs = 1. - Nratios
+    plt.bar(x_range, single_probs, label="Prob single", width=width)
+    plt.bar(x_range, Nratios, bottom=single_probs, label="Prob binar",
+            width=width)
+    plt.legend(fontsize=8)
+    plt.xlabel("Magnitude")
+
+    ax = plt.subplot(gs[1:2, 2:4])
+    x_range, Nratios = all_Nratios[1]
+    width = .8 * (x_range[1] - x_range[0])
+    # Center bins
+    x_range = .5 * (x_range[1:] + x_range[:-1])
+    single_probs = 1. - Nratios
+    plt.bar(x_range, single_probs, width=width)
+    plt.bar(x_range, Nratios, bottom=single_probs, width=width)
+    plt.xlabel("Mass")
+    plt.gca().invert_xaxis()
+
+    ax = plt.subplot(gs[0:2, 4:6])
     ax.minorticks_on()
     plt.scatter(*phot_bin_unused, s=5, c='k', lw=0, alpha=.5)
     plt.scatter(*phot_bin_used, s=10, c='r', lw=0, alpha=.5,
@@ -47,7 +88,7 @@ def main(
         alpha_bootstrp, (16, 50, 84))
     alpha_mean, alpha_std = alpha_bootstrp.mean(), alpha_bootstrp.std()
 
-    ax = plt.subplot(gs[0:2, 4:6])
+    ax = plt.subplot(gs[2:4, 0:2])
     ax.minorticks_on()
     plt.title(r"Bootstrap distribution (N={})".format(Nruns))
     sn.kdeplot(alpha_bootstrp)
@@ -62,7 +103,7 @@ def main(
     plt.xlabel(r"$\alpha$")
     plt.xlim(alpha_mean - 3 * alpha_std, alpha_mean + 3 * alpha_std)
 
-    ax = plt.subplot(gs[2:4, 0:4])
+    ax = plt.subplot(gs[2:4, 2:6])
     plt.title("Mass range: [{:.2f}, {:.2f}]".format(mass_min, mass_max))
     ax.grid(ls=':', lw=.5)
 
@@ -103,7 +144,7 @@ def main(
     plt.ylim(max(0.001, ymin), ymax + 10)
     plt.legend(fontsize=9)
 
-    ax = plt.subplot(gs[2:4, 4:6])
+    ax = plt.subplot(gs[4:6, 0:2])
     ax.minorticks_on()
     ax.tick_params(labelbottom=False)
     plt.title("Slope values for several mass ranges")
@@ -117,7 +158,7 @@ def main(
     plt.axhline(alpha_min, c='r', ls='--')
     plt.axhline(alpha_max, c='r', ls='--')
 
-    ax = plt.subplot(gs[4:6, 0:4])
+    ax = plt.subplot(gs[4:6, 2:6])
     plt.title(r"Slope for sampled IMFs, $M_T=${:.0f}".format(
         mass_mean_mass_msk.sum()))
     ax.grid(ls=':', lw=.5)
@@ -146,7 +187,8 @@ def main(
     plt.legend(ncol=2, fontsize=9)
 
     fig.tight_layout()
-    plt.savefig("output/IMF.png", dpi=150, bbox_inches='tight')
+    plt.savefig(
+        "output/IMF_{}.png".format(masses_type), dpi=150, bbox_inches='tight')
 
     print("Finished")
 

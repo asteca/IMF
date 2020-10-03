@@ -13,7 +13,7 @@ def main():
     RandomState(MT19937(SeedSequence(seed)))
 
     masses_type, Nruns, alpha_min, alpha_max, mag_min, mag_max, mass_min,\
-        mass_max, binar_min, binar_max = data_IO.readINI()
+        mass_max, binar_cut = data_IO.readINI()
 
     inputfiles = data_IO.readFiles()
 
@@ -24,11 +24,17 @@ def main():
         mass_mean, mass_std, binar_probs, phot = data_IO.dataRead(
             masses_type, file)
 
-        # Mask photometry and masses given the binary fraction probabilities
-        # range
-        bmsk = (binar_probs >= binar_min) & (binar_probs <= binar_max)
+        all_Nratios = mass_analysis.singleBinarRatio(
+            binar_cut, mass_mean, binar_probs, phot)
+
+        # Mask photometry and masses given the binary probability cut
+        if masses_type == 'single':
+            bmsk = binar_probs <= binar_cut
+        else:
+            bmsk = binar_probs >= binar_cut
         mass_mean_bmsk, mass_std_bmsk, phot_bmsk = mass_mean[bmsk],\
             mass_std[bmsk], phot[bmsk]
+
         # For plotting
         phot_bin_used, phot_bin_unused = phot_bmsk.T, phot[~bmsk].T
 
@@ -60,7 +66,8 @@ def main():
             sampled_IMFs[imf] = (mass_IMF, Lkl_IMF, bootstrp_IMF)
 
         makePlot.main(
-            Nruns, mag_min, mag_max, mass_min, mass_max, binar_min, binar_max,
+            masses_type, binar_cut, mag_min, mag_max, mass_min, mass_max,
+            Nruns, all_Nratios,
             binar_probs, phot_bin_used, phot_bin_unused, mass_mean_phot_msk,
             mass_mean_mass_msk, alpha_lkl, alpha_bootstrp, alpha_ranges,
             alpha_min, alpha_max, sampled_IMFs)

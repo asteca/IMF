@@ -2,6 +2,33 @@
 import numpy as np
 
 
+def singleBinarRatio(binar_cut, mass_mean, binar_probs, phot):
+    """
+    """
+    def probsRange(xdata):
+        """
+        """
+        # Define 10 bins in x data
+        x_range = np.linspace(xdata.min(), xdata.max(), 10)
+        Nratios = []
+        min_m = x_range[0]
+        for mag_m in x_range[1:]:
+            msk = (xdata >= min_m) & (xdata <= mag_m)
+            min_m = mag_m
+            binar_probs_msk = binar_probs[msk]
+            msk_b = binar_probs_msk <= binar_cut
+            Nsingle, Nbinar = binar_probs_msk[msk_b], binar_probs_msk[~msk_b]
+            Nratios.append(Nbinar.size / (Nsingle.size + Nbinar.size))
+
+        return x_range, np.array(Nratios)
+
+    all_Nratios = []
+    for xdata in (phot.T[1], mass_mean):
+        all_Nratios.append(probsRange(xdata))
+
+    return all_Nratios
+
+
 def maxLkl(mass_mean, alpha_bounds, bootsrp_args, full_mr_mean):
     """
     Method defined in Khalaj & Baumgardt (2013):
