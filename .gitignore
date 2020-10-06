@@ -129,6 +129,7 @@ dmypy.json
 .pyre/
 
 *.png
+!output.png
 input/*
 params.not_tracked.ini
 
