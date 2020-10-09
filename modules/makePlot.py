@@ -140,6 +140,7 @@ def main(
     ax.set_xticks([0.1, 0.5, 1, 2, 5])
     # ax.set_yticks([])
     ax.get_xaxis().set_major_formatter(ticker.ScalarFormatter())
+    # The x,y limits need to be better estimated
     plt.xlim(max(0.01, xmin), xmax + .5)
     plt.ylim(max(0.001, ymin), ymax + 10)
     plt.legend(fontsize=9)
