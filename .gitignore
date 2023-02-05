@@ -132,4 +132,4 @@ dmypy.json
 !output.png
 input/*
 params.not_tracked.ini
-
+*sublime*
