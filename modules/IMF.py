@@ -110,7 +110,7 @@ def kroupa01(m):
 #     """
 #     return x ** -2.35
 
-def invTrnsfSmpl(masses, IMF_name, m_low=0.01, m_high=100):
+def invTrnsfSmpl(masses, IMF_name, m_low=0.08, m_high=150):
     """
     IMF inverse transform sampling.
 
