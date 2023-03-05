@@ -61,8 +61,8 @@ def maxLkl(mass, alpha_bounds, bootsrp_args, mass_full_range):
 
     Nruns, mass_min, mass_max, mass_std = bootsrp_args
 
-    if mass_std is not None:
-        print("Bootstraping slope's distribution")
+    # if mass_std is not None:
+    #     print("Bootstraping slope's distribution")
     # Estimate bootstrap for alpha using DE algorithm.
     alpha_lst = []
     for _ in range(Nruns):
@@ -90,7 +90,7 @@ def maxLkl(mass, alpha_bounds, bootsrp_args, mass_full_range):
     if mass_std is None:
         return alpha_lkl, alpha_bootstrp
 
-    print("Creating dictionary of slopes for different mass ranges")
+    # print("Creating dictionary of slopes for different mass ranges")
     # Create dictionary of slopes. Store the Likelihood alpha obtained
     # with the filtered mass range
     alpha_ranges = {"[{:.2f}, {:.2f}]".format(

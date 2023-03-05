@@ -16,7 +16,7 @@ def main(
         alpha_ranges, alpha_min, alpha_max, sampled_IMFs):
     """
     """
-    print("Plotting..")
+    # print("Plotting..")
     fig = plt.figure(figsize=(20, 20))
     gs = gridspec.GridSpec(8, 8)
 

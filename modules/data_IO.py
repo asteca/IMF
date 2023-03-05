@@ -18,9 +18,9 @@ def readINI():
 
     # Data columns
     ipars = in_params['Input parameters']
-    masses_type, Nruns, alpha_min, alpha_max, mag_min, mag_max, mass_min,\
-        mass_max, binar_cut = ipars.get('masses_type'),\
-        ipars.getint('Nruns'),\
+    masses_type, Nruns, make_plot, alpha_min, alpha_max, mag_min, mag_max,\
+        mass_min, mass_max, binar_cut = ipars.get('masses_type'),\
+        ipars.getint('Nruns'), ipars.getboolean('make_plot'),\
         ipars.getfloat('alpha_min'), ipars.getfloat('alpha_max'),\
         ipars.getfloat('mag_min'), ipars.getfloat('mag_max'),\
         ipars.getfloat('mass_min'), ipars.getfloat('mass_max'),\
@@ -30,7 +30,7 @@ def readINI():
         raise ValueError("The 'masses_type' value is not valid")
 
     return masses_type, Nruns, alpha_min, alpha_max, mag_min, mag_max,\
-        mass_min, mass_max, binar_cut
+        mass_min, mass_max, binar_cut, make_plot
 
 
 def dataSave(data, file_out):

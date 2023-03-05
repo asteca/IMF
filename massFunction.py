@@ -9,18 +9,18 @@ def main():
     TODO: Apply completeness corrections?
     """
     seed = np.random.randint(100000000)
-    print("Random seed: {}".format(seed))
+    # print("Random seed: {}".format(seed))
     RandomState(MT19937(SeedSequence(seed)))
 
     masses_type, Nruns, alpha_min, alpha_max, mag_min, mag_max, mass_min,\
-        mass_max, binar_cut = data_IO.readINI()
+        mass_max, binar_cut, make_plot = data_IO.readINI()
 
     inputfiles = data_IO.readFiles()
 
     for file in inputfiles:
         fname = str(file).split('/')[1].split('.')[0]
         print("Processing: {}".format(fname))
-        print("Reading data from file")
+        # print("Reading data from file")
         mass, mass_std, binar_probs, phot = data_IO.dataRead(
             masses_type, file)
 
@@ -53,7 +53,15 @@ def main():
             mass_mass_msk, (alpha_min, alpha_max),
             (Nruns, mass_min, mass_max, mass_std_mass_msk), mass_phot_msk)
 
-        print("Sampling IMFs")
+        alpha_mean, alpha_std = alpha_bootstrp.mean(), alpha_bootstrp.std()
+        boot_bias = alpha_mean - alpha_lkl
+        print("alpha = {:.3f}+/-{:.3f}".format(
+            alpha_lkl - boot_bias, alpha_std))
+
+        if make_plot is False:
+            return
+
+        # print("Sampling IMFs")
         sampled_IMFs = {}
         for imf in ['Salpeter (55)', 'Miller-Scalo (79)', 'Kroupa (01)',
                     'Chabrier (03, indiv)', 'Chabrier (03, system)']:
