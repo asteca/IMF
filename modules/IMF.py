@@ -168,15 +168,22 @@ def invTrnsfSmpl(masses, IMF_name, m_low=0.01, m_high=100):
     M_total, M_min, M_max = masses.sum(), masses.min(), masses.max()
     mass_IMF = []
     while np.sum(mass_IMF) < M_total:
-        mass_samples = sampled_inv_cdf(1000)
+        mass_samples = sampled_inv_cdf(100)
         msk = (mass_samples >= M_min) & (mass_samples <= M_max)
         if msk.sum() > 0:
             mass_IMF += mass_samples[msk].tolist()
     mass_IMF = np.array(mass_IMF)
+    # print(mass_IMF.sum())
 
-    i = 1
-    while mass_IMF.sum() > M_total:
-        mass_IMF = mass_IMF[:-i]
-        i += 10
+    i = np.argmin(abs(np.cumsum(mass_IMF) - M_total))
+    mass_IMF = mass_IMF[:i + 1] * 1
+
+    # Remove stars until the M_total value is approximated
+    # i = 1
+    # while mass_IMF.sum() > M_total:
+    #     mass_IMF = mass_IMF[:-i]
+    #     i += 5
+    # print(mass_IMF.sum())
+    # print(mass_IMF2.sum())
 
     return mass_IMF
