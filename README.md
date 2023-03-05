@@ -21,10 +21,11 @@ The method employed here was originally developed in [Khalaj & Baumgardt
 (2013)](https://academic.oup.com/mnras/article/434/4/3236/960889) and used in 
 [Sheikhi et al. (2016)](https://academic.oup.com/mnras/article/457/1/1028/989829). It bypasses the need to bin the masses.
 
-The analysis requires the user to select first which stars will be processed.
-The `binar_min, binar_max` parameters filter stars by their probability of being
-a binary system. The `masses_type` parameter decides which masses will be used
+The `masses_type` parameter decides which masses will be used
 in the analysis: single or binary system masses.
+The analysis requires the user to select first which stars will be processed.
+The `binar_cut` parameter filters stars by their probability of being
+a binary system.
 
 After this the range for the slope is given by the `alpha_min, alpha_max`
 parameters, and the ranges for magnitude and mass by the `mag_min, mag_max` and
@@ -108,7 +109,7 @@ theoretical IMFs, for comparison.
 
 The colored crosses show the slope values that one would obtain applying the
 simpler histogram fit on the selected set of stars, for three different number
-of bins used (5, 10, 25).
+of bins used (5, 10, 25), where `LSF` stands for *Least Squares Fit*.
 
 The gray shaded region below `m=1` shows the region where most of the
 theoretical IMFs split their functions. The brown dotted line is the KDE of all
