@@ -122,29 +122,33 @@ def invTrnsfSmpl(masses, IMF_name, m_low=0.01, m_high=100):
     mass_step = 0.05
     mass_values = np.arange(m_low, m_high, mass_step)
 
+    #
+    # *** USE THIS BLOCK TO RE_GENERATE THE CDFs ***
+    #
     # # Generate and write CDFs
-    # if IMF_name == 'Salpeter (55)':
-    #     IMF_func = salpeter55
-    # elif IMF_name == 'Miller-Scalo (79)':
-    #     IMF_func = millerscalo79
-    # elif IMF_name == 'Kroupa (01)':
-    #     IMF_func = kroupa01
-    # elif IMF_name == 'Chabrier (03, indiv)':
-    #     IMF_func = chabrier03individual
-    # elif IMF_name == 'Chabrier (03, system)':
-    #     IMF_func = chabrier03system
-    # # Obtain normalization constant (k = \int_{m_low}^{m_up} \xi(m) dm). This
-    # # makes the IMF behave like a PDF.
-    # norm_const = quad(IMF_func, m_low, m_high)[0]
-    # # The CDF is defined as: $F(m)= \int_{m_low}^{m} PDF(m) dm$
-    # # Sample the CDF
-    # CDF_samples = []
-    # for m in mass_values:
-    #     CDF_samples.append(quad(IMF_func, m_low, m)[0])
-    # # Normalize values
-    # CDF_samples = np.array(CDF_samples) / norm_const
-    # with open('modules/{}.pickle'.format(imf_id), 'wb') as ff:
-    #     pickle.dump(CDF_samples, ff, protocol=pickle.HIGHEST_PROTOCOL)
+    # for IMF_name in ('Salpeter (55)', 'Miller-Scalo (79)', 'Kroupa (01)',
+    #                  'Chabrier (03, indiv)', 'Chabrier (03, system)'):
+    #     print(IMF_name)
+    #     if IMF_name == 'Salpeter (55)':
+    #         IMF_func = salpeter55
+    #     elif IMF_name == 'Miller-Scalo (79)':
+    #         IMF_func = millerscalo79
+    #     elif IMF_name == 'Kroupa (01)':
+    #         IMF_func = kroupa01
+    #     elif IMF_name == 'Chabrier (03, indiv)':
+    #         IMF_func = chabrier03individual
+    #     elif IMF_name == 'Chabrier (03, system)':
+    #         IMF_func = chabrier03system
+    #     imf_id = IMF_name.replace(' ', '_')
+    #     # Sample the CDF
+    #     CDF_samples = []
+    #     for m in mass_values:
+    #         CDF_samples.append(quad(IMF_func, m_low, m)[0])
+    #     # Normalize values
+    #     CDF_samples = np.array(CDF_samples) / max(CDF_samples)
+    #     with open('modules/{}.pickle'.format(imf_id), 'wb') as ff:
+    #         pickle.dump(CDF_samples, ff, protocol=pickle.HIGHEST_PROTOCOL)
+    # breakpoint()
 
     # Read CDFs from file
     with open('modules/{}.pickle'.format(imf_id), 'rb') as ff:
