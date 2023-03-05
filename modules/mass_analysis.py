@@ -29,7 +29,7 @@ def singleBinarRatio(binar_cut, mass_mean, binar_probs, phot):
     return all_Nratios
 
 
-def maxLkl(mass_mean, alpha_bounds, bootsrp_args, full_mr_mean):
+def maxLkl(mass, alpha_bounds, bootsrp_args, mass_full_range):
     """
     Method defined in Khalaj & Baumgardt (2013):
     https://academic.oup.com/mnras/article/434/4/3236/960889
@@ -38,18 +38,23 @@ def maxLkl(mass_mean, alpha_bounds, bootsrp_args, full_mr_mean):
     """
 
     def minfunc(alpha, x, xmin, xminmax, N):
-        y = abs(alpha - (1 + N / (
-                np.sum(np.log(x / xmin)) -
-                N * (np.log(xminmax) / (1 - xminmax**(alpha - 1))))))
+        y = abs(
+            alpha - (
+                1 + N / (
+                    np.sum(np.log(x / xmin))
+                    - N * (np.log(xminmax) / (1 - xminmax**(alpha - 1)))
+                )
+            )
+        )
         idx = np.argmin(y)
         return alpha[idx]
 
     # Slope on the original sample
-    N = mass_mean.size
-    xmin, xmax = mass_mean.min(), mass_mean.max()
+    N = mass.size
+    xmin, xmax = mass.min(), mass.max()
     xminmax = xmax / xmin
     alpha_vals = np.linspace(alpha_bounds[0], alpha_bounds[1], 5000)
-    alpha_lkl = minfunc(alpha_vals, mass_mean, xmin, xminmax, N)
+    alpha_lkl = minfunc(alpha_vals, mass, xmin, xminmax, N)
 
     Nruns, mass_min, mass_max, mass_std = bootsrp_args
 
@@ -60,17 +65,17 @@ def maxLkl(mass_mean, alpha_bounds, bootsrp_args, full_mr_mean):
     for _ in range(Nruns):
         # Re-sample mass values
         if mass_std is not None:
-            mass_sample = np.random.normal(mass_mean, mass_std)
-            # mass_sample = np.random.choice(mass_mean, mass_mean.size)
+            mass_sample = np.random.normal(mass, mass_std)
+            # mass_sample = np.random.choice(mass, mass.size)
         else:
-            mass_sample = np.random.choice(mass_mean, mass_mean.size)
+            mass_sample = np.random.choice(mass, mass.size)
 
         # Apply mass range
         msk = (mass_sample >= mass_min) & (mass_sample <= mass_max)
         mass_sample = mass_sample[msk]
 
         # Masses can not be smaller than this value
-        mass_sample = np.clip(mass_sample, a_min=0.01, a_max=None)
+        mass_sample = np.clip(mass_sample, a_min=0.08, a_max=None)
         N, xmin = mass_sample.size, mass_sample.min()
         xminmax = mass_sample.max() / xmin
         alpha_lst.append(minfunc(

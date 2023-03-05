@@ -47,14 +47,14 @@ def dataRead(masses_type, file_in):
     data = ascii.read(file_in)
 
     if masses_type == 'single':
-        mass_mean, mass_std = data['Mass_mu'], data['Mass_std']
+        mass, mass_std = data['M1'], data['M1_std']
     elif masses_type == 'binar':
-        mass_mean, mass_std = data['Mass_binar_mu'], data['Mass_binar_std']
+        mass, mass_std = data['M2'], data['M2_std']
 
     binar_probs = data['P_binar']
     phot = np.array([data['Col'], data['Mag']]).T
 
-    return mass_mean, mass_std, binar_probs, phot
+    return mass, mass_std, binar_probs, phot
 
 
 def readFiles():
