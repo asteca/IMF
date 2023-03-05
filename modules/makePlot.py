@@ -10,7 +10,7 @@ from .IMF import salpeter55, millerscalo79, kroupa01, chabrier03individual,\
 
 
 def main(
-    masses_type, binar_cut, mag_min, mag_max, mass_min, mass_max, Nruns,
+    fname, masses_type, binar_cut, mag_min, mag_max, mass_min, mass_max, Nruns,
     all_Nratios, binar_probs, phot_bin_used, phot_bin_unused,
     mass_mean_phot_msk, mass_mean_mass_msk, alpha_lkl, alpha_bootstrp,
         alpha_ranges, alpha_min, alpha_max, sampled_IMFs):
@@ -73,6 +73,7 @@ def main(
     plt.gca().invert_xaxis()
 
     ax = plt.subplot(gs[0:2, 4:6])
+    plt.title(masses_type)
     ax.minorticks_on()
     plt.scatter(*phot_bin_unused, s=5, c='k', lw=0, alpha=.5)
     plt.scatter(*phot_bin_used, s=10, c='r', lw=0, alpha=.5,
@@ -83,6 +84,8 @@ def main(
     plt.legend(fontsize=8)
     plt.ylim(ymin, ymax)
     plt.gca().invert_yaxis()
+    plt.xlabel("Color")
+    plt.ylabel("Mag")
 
     alpha_16p, alpha_50p, alpha_84p = np.percentile(
         alpha_bootstrp, (16, 50, 84))
@@ -97,7 +100,8 @@ def main(
     plt.axvline(alpha_50p, c='red', ls=':', label="median")
     plt.axvline(alpha_84p, c='orange', ls=':', label="84p")
     plt.axvline(alpha_mean, c='green', ls='--', label="mean")
-    txt = "Original sample\n(bias={:.3f})".format(alpha_mean - alpha_lkl)
+    boot_bias = alpha_mean - alpha_lkl
+    txt = "Original sample\n(bias={:.3f})".format(boot_bias)
     plt.axvline(alpha_lkl, c='k', ls='-', label=txt)
     plt.legend(fontsize=8)
     plt.xlabel(r"$\alpha$")
@@ -111,6 +115,10 @@ def main(
     for bins in (5, 10, 25):
         xmin, xmax, ymin, ymax, intercept = binnedIMF(
             ax, mass_mean_mass_msk, bins)
+
+    # Bias corrected value
+    # On bootstrap bias:  https://stats.stackexchange.com/a/488223/10416
+    alpha_lkl -= boot_bias
 
     # Plot Likelihood results
     # Best fit line. Use the (last) LSF intercept for vertical alignment
@@ -151,6 +159,7 @@ def main(
     plt.title("Slope values for several mass ranges")
     ax.grid(ls=':', lw=.5)
     for i, (k, v) in enumerate(alpha_ranges.items()):
+        v -= boot_bias
         if i == 0:
             plt.scatter(i, v, s=50, c='k', marker='o', label="{}".format(k))
         else:
@@ -189,7 +198,8 @@ def main(
 
     fig.tight_layout()
     plt.savefig(
-        "output/IMF_{}.png".format(masses_type), dpi=150, bbox_inches='tight')
+        "output/{}_{}.png".format(fname, masses_type),
+        dpi=150, bbox_inches='tight')
 
     print("Finished")
 
