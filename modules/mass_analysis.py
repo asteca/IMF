@@ -18,7 +18,10 @@ def singleBinarRatio(binar_cut, mass_mean, binar_probs, phot):
             binar_probs_msk = binar_probs[msk]
             msk_b = binar_probs_msk <= binar_cut
             Nsingle, Nbinar = binar_probs_msk[msk_b], binar_probs_msk[~msk_b]
-            Nratios.append(Nbinar.size / (Nsingle.size + Nbinar.size))
+            if Nsingle.size + Nbinar.size > 0:
+                Nratios.append(Nbinar.size / (Nsingle.size + Nbinar.size))
+            else:
+                Nratios.append(0)
 
         return x_range, np.array(Nratios)
 
@@ -91,20 +94,23 @@ def maxLkl(mass, alpha_bounds, bootsrp_args, mass_full_range):
     # Create dictionary of slopes. Store the Likelihood alpha obtained
     # with the filtered mass range
     alpha_ranges = {"[{:.2f}, {:.2f}]".format(
-        mass_mean.min(), mass_mean.max()): alpha_lkl}
+        mass.min(), mass.max()): alpha_lkl}
     # Estimate slopes using the full magnitude range
-    mr = np.linspace(full_mr_mean.min(), full_mr_mean.max(), 5)
+    mr = np.linspace(mass_full_range.min(), mass_full_range.max(), 5)
     mr1, mr2, mr3 = (mr[0], mr[1]), (mr[0], mr[2]), (mr[0], mr[3])
     mr4, mr5, mr6 = (mr[1], mr[2]), (mr[1], mr[3]), (mr[1], mr[4])
     mr7, mr8, mr9 = (mr[2], mr[3]), (mr[2], mr[4]), (mr[3], mr[4])
     mr10 = (mr[0], mr[4])
     for mrx in (mr1, mr2, mr3, mr4, mr5, mr6, mr7, mr8, mr9, mr10):
         mi, mh = mrx
-        msk = (full_mr_mean >= mi) & (full_mr_mean < mh)
+        msk = (mass_full_range >= mi) & (mass_full_range < mh)
 
-        mass_msk = full_mr_mean[msk]
+        mass_msk = mass_full_range[msk]
         N, xmin = mass_msk.size, mass_msk.min()
         xminmax = mass_msk.max() / xmin
+        if abs(xminmax - 1.) < 0.001:
+            continue
+
         alpha_ranges["[{:.2f}, {:.2f})".format(mi, mh)] = minfunc(
             alpha_vals, mass_msk, xmin, xminmax, N)
 
