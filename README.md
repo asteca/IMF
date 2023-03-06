@@ -9,7 +9,7 @@ moved it outside of ASteCA and into its own package.
 Install the requirements in a `conda` environment with:
 
 ```
-$ conda create --name imfenv python=3.8 numpy matplotlib seaborn astropy
+$ conda create --name imfenv python=3.10 numpy matplotlib seaborn astropy
 $ conda activate imfenv
 ```
 
