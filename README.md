@@ -21,16 +21,11 @@ The method employed here was originally developed in [Khalaj & Baumgardt
 (2013)](https://academic.oup.com/mnras/article/434/4/3236/960889) and used in 
 [Sheikhi et al. (2016)](https://academic.oup.com/mnras/article/457/1/1028/989829). It bypasses the need to bin the masses.
 
-The `masses_type` parameter decides which masses will be used
-in the analysis: single or binary system masses.
-The analysis requires the user to select first which stars will be processed.
 The `binar_cut` parameter filters stars by their probability of being
 a binary system.
-
 After this the range for the slope is given by the `alpha_min, alpha_max`
 parameters, and the ranges for magnitude and mass by the `mag_min, mag_max` and
 `mass_min, mass_max` respectively.
-
 Finally, the number of bootstrap runs is controlled by the `Nruns` parameter.
 
 
@@ -47,28 +42,10 @@ system. Hence: a low BP value means that the star is most likely a single
 system, and a large BP means it is most likely a binary system.
 
 The region shaded light red shows the BPs of the stars that were selected for
-the subsequent analysis. This selection is performed by:
-
-1. fixing the `binar_cut` parameter, which represent the probability value that
-separates single stars from binary systems. Stars with BPs below this value will
-be considered single stars, and binary systems for stars above this value.
-2. fixing the `masses_type` parameter to either `single` or `binar`. Selecting
-the former means that the code will select stars with BPs *below* the
-`binar_cut` value, and consider all of them to be single systems. The latter on
-the other hand selects stars *above* the `binar_cut` value and considers all of
-them to be binary systems.
-
-For example, if you want to analyze the IMF of the sequence of single systems,
-you'd select something like:
-
-    binar_cut      = .5
-    masses_type    = single
-
-If you wanted to analyze the IMF of the most probable binary systems, you could
-select:
-
-    binar_cut      = .75
-    masses_type    = binar
+the subsequent analysis. This selection is performed by fixing the `binar_cut`
+parameter, which represent the probability value that separates single stars
+from binary systems. Stars with BPs below this value will be considered
+single stars, and binary systems for stars above this value.
 
 The black curve shows the *binary fraction* of the cluster for different values
 of the `binar_cut` parameter. It has a value of 1 for `binar_cut=0` (since all
@@ -83,8 +60,8 @@ being a binary is 1 minus the probability of being a single system (no systems
 of higher number are considered, i.e. ternary, etc.)
 
 **C**.
-CMD of the input data. The stars colored in red are those that are used in the
-analysis, selected as described in plot **A**. The rest (black stars) are
+CMD of the input data. The stars colored in black are those that are used in the
+analysis, selected as described in plot **A**. The rest (red stars) are
 ignored.
 
 The user can also restrict the analysis to a magnitude and/or mass range using

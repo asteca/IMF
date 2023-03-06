@@ -10,7 +10,7 @@ from .IMF import salpeter55, millerscalo79, kroupa01, chabrier03individual,\
 
 
 def main(
-    fname, masses_type, binar_cut, mag_min, mag_max, mass_min, mass_max, Nruns,
+    fname, binar_cut, mag_min, mag_max, mass_min, mass_max, Nruns,
     all_Nratios, binar_probs, phot_bin_used, phot_bin_unused,
     mass_mean_phot_msk, mass_mean_mass_msk, alpha_lkl, alpha_bootstrp,
         alpha_ranges, alpha_min, alpha_max, sampled_IMFs):
@@ -30,10 +30,7 @@ def main(
         width=(edges[1] - edges[0]))
 
     plt.xlabel("Binary system probability")
-    if masses_type == 'single':
-        binar_min, binar_max = 0., binar_cut
-    else:
-        binar_min, binar_max = binar_cut, 1
+    binar_min, binar_max = 0., binar_cut
     plt.axvline(x=binar_min, c='r')
     plt.axvline(x=binar_max, c='r')
     ax.axvspan(binar_min, binar_max, alpha=0.1, color='red')
@@ -73,10 +70,9 @@ def main(
     plt.gca().invert_xaxis()
 
     ax = plt.subplot(gs[0:2, 4:6])
-    plt.title(masses_type)
     ax.minorticks_on()
-    plt.scatter(*phot_bin_unused, s=5, c='k', lw=0, alpha=.5)
-    plt.scatter(*phot_bin_used, s=10, c='r', lw=0, alpha=.5,
+    plt.scatter(*phot_bin_unused, c='r', lw=0, alpha=.5)
+    plt.scatter(*phot_bin_used, c='k', lw=0, alpha=.5,
                 label="N={}".format(phot_bin_used.shape[1]))
     ymin, ymax = ax.get_ylim()
     plt.axhline(mag_min, c='grey', ls=':')
@@ -198,8 +194,7 @@ def main(
 
     fig.tight_layout()
     plt.savefig(
-        "output/{}_{}.png".format(fname, masses_type),
-        dpi=150, bbox_inches='tight')
+        "output/{}.png".format(fname), dpi=150, bbox_inches='tight')
 
     print("Finished")
 

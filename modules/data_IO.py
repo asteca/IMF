@@ -18,18 +18,15 @@ def readINI():
 
     # Data columns
     ipars = in_params['Input parameters']
-    masses_type, Nruns, make_plot, alpha_min, alpha_max, mag_min, mag_max,\
-        mass_min, mass_max, binar_cut = ipars.get('masses_type'),\
-        ipars.getint('Nruns'), ipars.getboolean('make_plot'),\
+    Nruns, make_plot, alpha_min, alpha_max, mag_min, mag_max,\
+        mass_min, mass_max, binar_cut = ipars.getint('Nruns'),\
+        ipars.getboolean('make_plot'),\
         ipars.getfloat('alpha_min'), ipars.getfloat('alpha_max'),\
         ipars.getfloat('mag_min'), ipars.getfloat('mag_max'),\
         ipars.getfloat('mass_min'), ipars.getfloat('mass_max'),\
         ipars.getfloat('binar_cut')
 
-    if masses_type not in ('single', 'binar'):
-        raise ValueError("The 'masses_type' value is not valid")
-
-    return masses_type, Nruns, alpha_min, alpha_max, mag_min, mag_max,\
+    return Nruns, alpha_min, alpha_max, mag_min, mag_max,\
         mass_min, mass_max, binar_cut, make_plot
 
 
@@ -40,17 +37,12 @@ def dataSave(data, file_out):
     ascii.write(data, file_out, overwrite=True)
 
 
-def dataRead(masses_type, file_in):
+def dataRead(file_in):
     """
     Read data file
     """
     data = ascii.read(file_in)
-
-    if masses_type == 'single':
-        mass, mass_std = data['M1'], data['M1_std']
-    elif masses_type == 'binar':
-        mass, mass_std = data['M2'], data['M2_std']
-
+    mass, mass_std = data['M1'], data['M1_std']
     binar_probs = data['P_binar']
     phot = np.array([data['Col'], data['Mag']]).T
 
