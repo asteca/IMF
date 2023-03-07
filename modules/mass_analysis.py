@@ -81,6 +81,8 @@ def maxLkl(mass, alpha_bounds, bootsrp_args, mass_full_range):
         mass_sample = np.clip(mass_sample, a_min=0.08, a_max=None)
         N, xmin = mass_sample.size, mass_sample.min()
         xminmax = mass_sample.max() / xmin
+        if abs(xminmax - 1.) < 0.001:
+            continue
         alpha_lst.append(minfunc(
             alpha_vals, mass_sample, xmin, xminmax, N))
 
@@ -106,6 +108,8 @@ def maxLkl(mass, alpha_bounds, bootsrp_args, mass_full_range):
         msk = (mass_full_range >= mi) & (mass_full_range < mh)
 
         mass_msk = mass_full_range[msk]
+        if len(mass_msk) == 0:
+            continue
         N, xmin = mass_msk.size, mass_msk.min()
         xminmax = mass_msk.max() / xmin
         if abs(xminmax - 1.) < 0.001:
