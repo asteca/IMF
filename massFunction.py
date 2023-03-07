@@ -1,4 +1,5 @@
 
+import warnings
 import numpy as np
 from numpy.random import MT19937, RandomState, SeedSequence
 from modules import data_IO, mass_analysis, IMF, makePlot
@@ -27,6 +28,9 @@ def main():
 
         # Mask photometry and masses given the binary probability cut
         bmsk = binar_probs <= binar_cut
+        if bmsk.sum() < 20:
+            warnings.warn("Less than20 stars identified as single systems",
+                          UserWarning)
         mass_bmsk, mass_std_bmsk, phot_bmsk = mass[bmsk],\
             mass_std[bmsk], phot[bmsk]
 
