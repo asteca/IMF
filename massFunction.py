@@ -29,7 +29,7 @@ def main():
         # Mask photometry and masses given the binary probability cut
         bmsk = binar_probs <= binar_cut
         if bmsk.sum() < 20:
-            warnings.warn("Less than20 stars identified as single systems",
+            warnings.warn("Less than 20 stars identified as single systems",
                           UserWarning)
         mass_bmsk, mass_std_bmsk, phot_bmsk = mass[bmsk],\
             mass_std[bmsk], phot[bmsk]
@@ -41,11 +41,25 @@ def main():
         msk = (phot_bmsk[:, 1] >= mag_min) & (phot_bmsk[:, 1] <= mag_max)
         mass_phot_msk, mass_std_phot_msk = mass_bmsk[msk],\
             mass_std_bmsk[msk]
+        if (msk.sum() > 2) & (msk.sum() < 20):
+            warnings.warn("Less than 20 stars identified as single systems",
+                          UserWarning)
+        elif msk.sum() <= 2:
+            warnings.warn("Less than 2 stars identified as single systems. "
+                          + "Can not process", UserWarning)
+            continue
 
         # Apply mass range. Used by the likelihood analysis
         msk = (mass_phot_msk >= mass_min) & (mass_phot_msk <= mass_max)
         mass_mass_msk, mass_std_mass_msk = mass_phot_msk[msk],\
             mass_std_phot_msk[msk]
+        if (msk.sum() > 2) & (msk.sum() < 20):
+            warnings.warn("Less than 20 stars identified as single systems",
+                          UserWarning)
+        elif msk.sum() <= 2:
+            warnings.warn("Less than 2 stars identified as single systems. "
+                          + "Can not process", UserWarning)
+            continue
 
         # Maximum likelihood analysis
         alpha_lkl, alpha_bootstrp, alpha_ranges = mass_analysis.maxLkl(
