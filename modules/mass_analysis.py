@@ -1,5 +1,6 @@
 
 import numpy as np
+from astropy.stats import histogram as ashist
 
 
 def singleBinarRatio(binar_cut, mass_mean, binar_probs, phot):
@@ -32,7 +33,7 @@ def singleBinarRatio(binar_cut, mass_mean, binar_probs, phot):
     return all_Nratios
 
 
-def maxLkl(mass, alpha_bounds, bootsrp_args, mass_full_range):
+def maxLkl(mass, alpha_min=-1, alpha_max=5):
     """
     Method defined in Khalaj & Baumgardt (2013):
     https://academic.oup.com/mnras/article/434/4/3236/960889
@@ -56,66 +57,54 @@ def maxLkl(mass, alpha_bounds, bootsrp_args, mass_full_range):
     N = mass.size
     xmin, xmax = mass.min(), mass.max()
     xminmax = xmax / xmin
-    alpha_vals = np.linspace(alpha_bounds[0], alpha_bounds[1], 5000)
+    if alpha_min <= 1:
+        # Protect from -1 divergence
+        alpha_r1 = list(np.linspace(alpha_min, .95, 2500))
+        alpha_r2 = list(np.linspace(1.05, alpha_max, 2500))
+        alpha_vals = np.array(alpha_r1 + alpha_r2)
+    else:
+        alpha_vals = np.linspace(alpha_min, alpha_max, 5000)
     alpha_lkl = minfunc(alpha_vals, mass, xmin, xminmax, N)
 
-    Nruns, mass_min, mass_max, mass_std = bootsrp_args
+    N = mass.size
+    alpha_std = (1/np.sqrt(N)) * (
+        (alpha_lkl-1)**(-2) - np.log(xminmax)**2*(
+            (xminmax**(alpha_lkl-1))/(1-xminmax**(alpha_lkl-1))**2))**(-.5)
 
-    # if mass_std is not None:
-    #     print("Bootstraping slope's distribution")
-    # Estimate bootstrap for alpha using DE algorithm.
-    alpha_lst = []
-    for _ in range(Nruns):
-        # Re-sample mass values
-        if mass_std is not None:
-            mass_sample = np.random.normal(mass, mass_std)
-            # mass_sample = np.random.choice(mass, mass.size)
-        else:
-            mass_sample = np.random.choice(mass, mass.size)
+    return alpha_lkl, alpha_std
 
-        # Apply mass range
-        msk = (mass_sample >= mass_min) & (mass_sample <= mass_max)
-        mass_sample = mass_sample[msk]
 
-        # Masses can not be smaller than this value
-        mass_sample = np.clip(mass_sample, a_min=0.08, a_max=None)
-        N, xmin = mass_sample.size, mass_sample.min()
-        xminmax = mass_sample.max() / xmin
-        if abs(xminmax - 1.) < 0.001:
-            continue
-        alpha_lst.append(minfunc(
-            alpha_vals, mass_sample, xmin, xminmax, N))
+def binnedIMF(mass, bins):
+    """
+    """
+    # Histogram of all the masses
+    yy, xx = ashist(mass, bins=bins, density=True)
 
-    # intercept = (1 - alpha)/(mass_max**(1 - alpha)-mass_min**(1 - alpha))
-    alpha_bootstrp = np.array(alpha_lst)
+    # Remove possible nans
+    yy[np.isnan(yy)] = 0.
+    # Align x values
+    xx = .5 * (xx[1:] + xx[:-1])
+    # Remove empty bins. Not sure if this has any impact
+    msk = yy != 0
+    yy, xx = yy[msk], xx[msk]
 
-    if mass_std is None:
-        return alpha_lkl, alpha_bootstrp
+    # Perform LSF fit in logarithmic values
+    alpha, intercept, alpha_std = logLSF(xx, yy)
 
-    # print("Creating dictionary of slopes for different mass ranges")
-    # Create dictionary of slopes. Store the Likelihood alpha obtained
-    # with the filtered mass range
-    alpha_ranges = {"[{:.2f}, {:.2f}]".format(
-        mass.min(), mass.max()): alpha_lkl}
-    # Estimate slopes using the full magnitude range
-    mr = np.linspace(mass_full_range.min(), mass_full_range.max(), 5)
-    mr1, mr2, mr3 = (mr[0], mr[1]), (mr[0], mr[2]), (mr[0], mr[3])
-    mr4, mr5, mr6 = (mr[1], mr[2]), (mr[1], mr[3]), (mr[1], mr[4])
-    mr7, mr8, mr9 = (mr[2], mr[3]), (mr[2], mr[4]), (mr[3], mr[4])
-    mr10 = (mr[0], mr[4])
-    for mrx in (mr1, mr2, mr3, mr4, mr5, mr6, mr7, mr8, mr9, mr10):
-        mi, mh = mrx
-        msk = (mass_full_range >= mi) & (mass_full_range < mh)
+    return bins, xx, yy, -alpha, intercept, alpha_std
 
-        mass_msk = mass_full_range[msk]
-        if len(mass_msk) == 0:
-            continue
-        N, xmin = mass_msk.size, mass_msk.min()
-        xminmax = mass_msk.max() / xmin
-        if abs(xminmax - 1.) < 0.001:
-            continue
 
-        alpha_ranges["[{:.2f}, {:.2f})".format(mi, mh)] = minfunc(
-            alpha_vals, mass_msk, xmin, xminmax, N)
+def logLSF(xx, yy):
+    """
+    """
+    # Least squares fit
+    y_log = np.log10(yy)
+    # Mask -inf values that can appear when a bin contains 0 elements.
+    msk = y_log == -np.inf
+    x_log = np.log10(xx[~msk])
+    y_log = y_log[~msk]
+    pars, cov_matrix = np.polyfit(x_log, y_log, 1, cov=True)
+    alpha, intercept = pars
+    alpha_std = np.sqrt(cov_matrix[0][0])
 
-    return alpha_lkl, alpha_bootstrp, alpha_ranges
+    return alpha, intercept, alpha_std

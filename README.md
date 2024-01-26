@@ -1,15 +1,13 @@
 # IMF
 
-Estimate the IMF for an observed cluster, given its individual masses
-(and uncertainties). This is a rather complicated processes to generalize, so I
-moved it outside of ASteCA and into its own package.
+Estimate the IMF for an observed cluster, given estimates of its individual masses.
 
 ## Installation
 
 Install the requirements in a `conda` environment with:
 
 ```
-$ conda create --name imfenv python=3.10 numpy matplotlib seaborn astropy
+$ conda create --name imfenv python=3.11 numpy matplotlib astropy
 $ conda activate imfenv
 ```
 
@@ -21,12 +19,7 @@ The method employed here was originally developed in [Khalaj & Baumgardt
 (2013)](https://academic.oup.com/mnras/article/434/4/3236/960889) and used in 
 [Sheikhi et al. (2016)](https://academic.oup.com/mnras/article/457/1/1028/989829). It bypasses the need to bin the masses.
 
-The `binar_cut` parameter filters stars by their probability of being
-a binary system.
-After this the range for the slope is given by the `alpha_min, alpha_max`
-parameters, and the ranges for magnitude and mass by the `mag_min, mag_max` and
-`mass_min, mass_max` respectively.
-Finally, the number of bootstrap runs is controlled by the `Nruns` parameter.
+This method diverges for `alpha=1`, which means it can not fit this IMF slope value.
 
 
 ## Output
@@ -64,49 +57,27 @@ CMD of the input data. The stars colored in black are those that are used in the
 analysis, selected as described in plot **A**. The rest (red stars) are
 ignored.
 
-The user can also restrict the analysis to a magnitude and/or mass range using
-the parameters:
+The user can also restrict the analysis to a magnitude range using the parameters:
 
-    mag_min        = 0
+    mag_min        = 4
     mag_max        = 25
-    mass_min       = 1.
-    mass_max       = 100
 
-It is recommended to use a `mass_min` value of 1, since below this mass value
-the IMF will most likely be a poor fit.
 
 **D**.
-Bootstrap distribution for the fitted slope (alpha parameter in the IMF)
+Histogram of all single systems' masses and of the selected single systems' masses.
 
 **E**.
 The dashed black line shows the maximum likelihood fit (as described in
 *Khalaj & Baumgardt 2013*) on the selected set of stars shown in plot **C** as
-red stars. The remaining colored dashed lines are the slopes of several
-theoretical IMFs, for comparison.
+black points. The Salpeter (1955) slope is also shown, for comparison.
 
 The colored crosses show the slope values that one would obtain applying the
 simpler histogram fit on the selected set of stars, for three different number
-of bins used (5, 10, 25), where `LSF` stands for *Least Squares Fit*.
+of bins used, where `LSF` stands for *Least Squares Fit*.
 
 The gray shaded region below `m=1` shows the region where most of the
 theoretical IMFs split their functions. The brown dotted line is the KDE of all
 the observed stars, for comparison.
-
-**F**.
-The black point to the left of the plot is the same slope value shown in
-plot **E** for the likelihood analysis performed on the selected mass range. The
-rest of the colored crosses are the slopes obtained with the same analysis, but
-using different mass ranges (shown in the legend)
-
-**G**.
-This is the same likelihood analysis performed for our data in plot **E**, but
-applied instead to synthetic data sampled for the theoretical IMFs listed. All
-the IMFs are sampled in the same mass range as the observed data, such that the
-total mass is the same. The idea is to see what does the likelihood method
-return for data sampled from theoretical IMFs in this mass range.
-
-The crosses represent the simple histogram fit for each theoretical data sample,
-using 25 bins.
 
 
 

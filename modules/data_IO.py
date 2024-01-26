@@ -18,23 +18,11 @@ def readINI():
 
     # Data columns
     ipars = in_params['Input parameters']
-    Nruns, make_plot, alpha_min, alpha_max, mag_min, mag_max,\
-        mass_min, mass_max, binar_cut = ipars.getint('Nruns'),\
-        ipars.getboolean('make_plot'),\
-        ipars.getfloat('alpha_min'), ipars.getfloat('alpha_max'),\
-        ipars.getfloat('mag_min'), ipars.getfloat('mag_max'),\
-        ipars.getfloat('mass_min'), ipars.getfloat('mass_max'),\
+    make_plot, mag_min, mag_max, binar_cut = ipars.getboolean('make_plot'), \
+        ipars.getfloat('mag_min'), ipars.getfloat('mag_max'), \
         ipars.getfloat('binar_cut')
 
-    return Nruns, alpha_min, alpha_max, mag_min, mag_max,\
-        mass_min, mass_max, binar_cut, make_plot
-
-
-def dataSave(data, file_out):
-    """
-    Create output data file
-    """
-    ascii.write(data, file_out, overwrite=True)
+    return mag_min, mag_max, binar_cut, make_plot
 
 
 def dataRead(file_in):
@@ -53,11 +41,10 @@ def readFiles():
     """
     Read files from the input folder
     """
+    path = "input"
     files = []
-    for pp in Path('input').iterdir():
+    for pp in Path(path).iterdir():
         if pp.is_file():
             files += [pp]
-        # else:
-        #     files += [arch for arch in pp.iterdir()]
 
     return files
